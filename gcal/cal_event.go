@@ -37,6 +37,11 @@ func (calEvent *CalEvent) ConflictsWith(otherEvents []*CalEvent) bool {
 			hasConflict = true
 			break
 		}
+
+		if calEvent.AllDay() && calEvent.StartDate().Equal(otherEvent.StartDate()) {
+			hasConflict = true
+			break
+		}
 	}
 
 	return hasConflict
@@ -71,26 +76,29 @@ func (calEvent *CalEvent) End() time.Time {
 	var calcTime string
 
 	if calEvent.AllDay() {
-		calcTime = calEvent.event.End.Date
-	} else {
-		calcTime = calEvent.event.End.DateTime
+		end, _ := time.Parse(wtf.DateFormat, calEvent.event.End.Date)
+		return end
 	}
-
+	calcTime = calEvent.event.End.DateTime
 	end, _ := time.Parse(time.RFC3339, calcTime)
 	return end
 }
 
+func (calEvent *CalEvent) EndDate() time.Time {
+	return roundToMidnight(calEvent.End())
+}
+
 func (calEvent *CalEvent) Start() time.Time {
-	var calcTime string
-
 	if calEvent.AllDay() {
-		calcTime = calEvent.event.Start.Date
-	} else {
-		calcTime = calEvent.event.Start.DateTime
+		start, _ := time.Parse(wtf.DateFormat, calEvent.event.Start.Date)
+		return start
 	}
-
-	start, _ := time.Parse(time.RFC3339, calcTime)
+	start, _ := time.Parse(time.RFC3339, calEvent.event.Start.DateTime)
 	return start
+}
+
+func (calEvent *CalEvent) StartDate() time.Time {
+	return roundToMidnight(calEvent.Start())
 }
 
 func (calEvent *CalEvent) Timestamp() string {
@@ -101,4 +109,9 @@ func (calEvent *CalEvent) Timestamp() string {
 
 	startTime, _ := time.Parse(time.RFC3339, calEvent.event.Start.DateTime)
 	return startTime.Format(wtf.MinimumTimeFormat)
+}
+
+func roundToMidnight(t time.Time) time.Time {
+	t = t.Local()
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }

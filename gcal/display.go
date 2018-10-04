@@ -9,21 +9,6 @@ import (
 	"github.com/senorprogrammer/wtf/wtf"
 )
 
-func (widget *Widget) sortedEvents() ([]*CalEvent, []*CalEvent) {
-	allDayEvents := []*CalEvent{}
-	timedEvents := []*CalEvent{}
-
-	for _, calEvent := range widget.calEvents {
-		if calEvent.AllDay() {
-			allDayEvents = append(allDayEvents, calEvent)
-		} else {
-			timedEvents = append(timedEvents, calEvent)
-		}
-	}
-
-	return allDayEvents, timedEvents
-}
-
 func (widget *Widget) display() {
 	if widget.calEvents == nil || len(widget.calEvents) == 0 {
 		return
@@ -32,9 +17,8 @@ func (widget *Widget) display() {
 	widget.mutex.Lock()
 	defer widget.mutex.Unlock()
 
-	_, timedEvents := widget.sortedEvents()
 	widget.View.SetTitle(widget.ContextualTitle(widget.Name))
-	widget.View.SetText(widget.contentFrom(timedEvents))
+	widget.View.SetText(widget.contentFrom(widget.calEvents))
 }
 
 func (widget *Widget) contentFrom(calEvents []*CalEvent) string {
@@ -50,7 +34,7 @@ func (widget *Widget) contentFrom(calEvents []*CalEvent) string {
 	}
 
 	for _, calEvent := range calEvents {
-		timestamp := fmt.Sprintf("[%s]%s", widget.descriptionColor(calEvent), calEvent.Timestamp())
+		timestamp := widget.timestampString(calEvent)
 
 		title := fmt.Sprintf("[%s]%s",
 			widget.titleColor(calEvent),
@@ -88,13 +72,8 @@ func (widget *Widget) dayDivider(event, prevEvent *CalEvent) string {
 		prevStartTime = prevEvent.Start()
 	}
 
-	// round times to midnight for comparison
-	toMidnight := func(t time.Time) time.Time {
-		t = t.Local()
-		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-	}
-	prevStartDay := toMidnight(prevStartTime)
-	eventStartDay := toMidnight(event.Start())
+	prevStartDay := roundToMidnight(prevStartTime)
+	eventStartDay := roundToMidnight(event.Start())
 
 	if !eventStartDay.Equal(prevStartDay) {
 
@@ -105,6 +84,13 @@ func (widget *Widget) dayDivider(event, prevEvent *CalEvent) string {
 	}
 
 	return ""
+}
+
+func (widget *Widget) timestampString(event *CalEvent) string {
+	if event.AllDay() {
+		return wtf.Config.UString("wtf.mods.gcal.allDayIcon", "🕛")
+	}
+	return fmt.Sprintf("[%s]%s", widget.descriptionColor(event), event.Timestamp())
 }
 
 func (widget *Widget) descriptionColor(calEvent *CalEvent) string {
