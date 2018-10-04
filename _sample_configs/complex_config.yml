@@ -67,6 +67,7 @@ wtf:
         past: "gray"
       conflictIcon: "🚨"
       currentIcon: "💥"
+      allDayIcon: "🕛"
       displayResponseStatus: true
       email: "your.email@example.com"
       enabled: true

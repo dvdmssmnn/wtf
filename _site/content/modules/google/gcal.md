@@ -33,6 +33,7 @@ gcal:
     past: "gray"
   conflictIcon: "🚨"
   currentIcon: "💥"
+  allDayIcon: "🕛"
   displayResponseStatus: true
   email: "chriscummer@me.com"
   enabled: true
@@ -76,6 +77,10 @@ Values: Any displayable unicode character.
 
 `currentIcon` <br />
 The icon displayed beside the current calendar event. <br />
+Values: Any displayable unicode character.
+
+`allDayIcon` <br />
+The icon displayed instead of the starting time of the event. <br />
 Values: Any displayable unicode character.
 
 `displayLocation` <br />
